@@ -5,10 +5,17 @@
       <p>Резервишите терене, пронађите саиграче и управљајте спортским активностима</p>
     </div>
 
-    <div class="buttons">
-      <a routerLink="/login" class="btn btn-primary">Пријава</a>
-      <a routerLink="/register" class="btn btn-secondary">Регистрација</a>
-    </div>
+    @if (isLoggedIn) {
+      <div class="welcome-block">
+        <p class="welcome-text">Dobrodošli nazad, <strong>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</strong>!</p>
+        <button class="btn btn-primary" (click)="goToDashboard()">Idi na moj dashboard</button>
+      </div>
+    } @else {
+      <div class="buttons">
+        <a routerLink="/login" class="btn btn-primary">Пријава</a>
+        <a routerLink="/register" class="btn btn-secondary">Регистрација</a>
+      </div>
+    }
   </div>
 </div>
 

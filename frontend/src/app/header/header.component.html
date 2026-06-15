@@ -1,15 +1,29 @@
 <header class="header">
   <div class="header-container">
-    <div class="logo">
-      <h1>🏆 SportSphere Hub</h1>
-    </div>
+
+    <a class="logo" routerLink="/">
+      <span class="logo-icon">🏆</span>
+      <span class="logo-text">SportSphere Hub</span>
+    </a>
 
     <nav class="nav">
-      <ul class="nav-list">
-        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Почетна</a></li>
-        <li><a routerLink="/login" routerLinkActive="active">Пријава</a></li>
-        <li><a routerLink="/register" routerLinkActive="active">Регистрација</a></li>
-      </ul>
+      @if (isLoggedIn) {
+        <a class="nav-link" routerLink="/">Početna</a>
+        <a class="nav-link" [routerLink]="dashboardRoute">
+          @if (currentUser?.profilePicture) {
+            <img class="nav-avatar" [src]="currentUser!.profilePicture" alt="" />
+          } @else {
+            <span class="nav-initials">{{ currentUser?.firstName?.[0] }}{{ currentUser?.lastName?.[0] }}</span>
+          }
+          {{ currentUser?.firstName }}
+        </a>
+        <button class="btn-logout" (click)="logout()">Odjavi se</button>
+      } @else {
+        <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Početna</a>
+        <a class="nav-link" routerLink="/login" routerLinkActive="active">Prijava</a>
+        <a class="nav-btn" routerLink="/register">Registracija</a>
+      }
     </nav>
+
   </div>
 </header>

@@ -31,6 +31,19 @@
   flex-wrap: wrap;
 }
 
+.welcome-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.welcome-text {
+  font-size: 1.15rem;
+  color: #444;
+  margin: 0;
+}
+
 .btn {
   padding: 1rem 2rem;
   font-size: 1rem;

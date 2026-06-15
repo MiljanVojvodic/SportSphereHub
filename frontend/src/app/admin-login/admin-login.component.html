@@ -1,0 +1,30 @@
+<div class="admin-login-wrapper">
+  <div class="admin-login-card">
+    <div class="admin-badge">🔐 Admin pristup</div>
+    <h2>Administracija</h2>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">{{ errorMessage }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Korisničko ime</label>
+        <input type="text" formControlName="username" class="form-control"
+               [class.is-invalid]="form.get('username')!.invalid && form.get('username')!.touched"
+               placeholder="Unesite korisničko ime" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label>Lozinka</label>
+        <input type="password" formControlName="password" class="form-control"
+               [class.is-invalid]="form.get('password')!.invalid && form.get('password')!.touched"
+               placeholder="Unesite lozinku" />
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="isLoading">
+        @if (isLoading) { Prijava... } @else { Prijavi se }
+      </button>
+    </form>
+  </div>
+</div>

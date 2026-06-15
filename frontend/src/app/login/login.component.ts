@@ -40,8 +40,12 @@ export class LoginComponent {
     this.authService.login(username, password).subscribe({
       next: (res) => {
         this.isLoading = false;
+        if (res.user.role === 'admin') {
+          this.authService.logout();
+          this.errorMessage = 'Administratori se prijavljuju putem posebne stranice.';
+          return;
+        }
         switch (res.user.role) {
-          case 'admin': this.router.navigate(['/admin']); break;
           case 'employee': this.router.navigate(['/employee']); break;
           default: this.router.navigate(['/athlete']); break;
         }

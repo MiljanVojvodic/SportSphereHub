@@ -1,0 +1,171 @@
+<div class="admin-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">🏟</span>
+      <span class="brand-name">SportSphere</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item" [class.active]="activeTab === 'pending'" (click)="activeTab = 'pending'">
+        <span class="nav-icon">📋</span>
+        <span>Zahtevi</span>
+        @if (pendingUsers.length > 0) {
+          <span class="nav-badge">{{ pendingUsers.length }}</span>
+        }
+      </button>
+      <button class="nav-item" [class.active]="activeTab === 'users'" (click)="activeTab = 'users'">
+        <span class="nav-icon">👥</span>
+        <span>Korisnici</span>
+      </button>
+    </nav>
+    <button class="sidebar-logout" (click)="logout()">
+      <span>🚪</span> Odjavi se
+    </button>
+  </aside>
+
+  <!-- Main area -->
+  <main class="admin-main">
+
+    <!-- Header -->
+    <header class="admin-header">
+      @if (activeTab === 'pending') {
+        <h1>Zahtevi za registraciju</h1>
+        <p class="header-sub">Pregled i obrada novih zahteva</p>
+      } @else {
+        <h1>Upravljanje korisnicima</h1>
+        <p class="header-sub">Pregled, blokiranje i brisanje naloga</p>
+      }
+    </header>
+
+    <!-- Toast -->
+    @if (toastMessage) {
+      <div class="toast" [class.toast-success]="toastType === 'success'" [class.toast-error]="toastType === 'error'">
+        {{ toastMessage }}
+      </div>
+    }
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-card stat-pending">
+        <div class="stat-number">{{ pendingUsers.length }}</div>
+        <div class="stat-label">Na čekanju</div>
+      </div>
+      <div class="stat-card stat-total">
+        <div class="stat-number">{{ allUsers.length }}</div>
+        <div class="stat-label">Ukupno korisnika</div>
+      </div>
+      <div class="stat-card stat-active">
+        <div class="stat-number">{{ activeCount }}</div>
+        <div class="stat-label">Aktivnih</div>
+      </div>
+      <div class="stat-card stat-blocked">
+        <div class="stat-number">{{ blockedCount }}</div>
+        <div class="stat-label">Blokiranih</div>
+      </div>
+    </div>
+
+    <!-- Pending registrations tab -->
+    @if (activeTab === 'pending') {
+      <div class="table-card">
+        @if (pendingUsers.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">✅</div>
+            <p>Nema zahteva za registraciju na čekanju.</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Korisnik</th>
+                <th>Ime i prezime</th>
+                <th>Uloga</th>
+                <th>Email</th>
+                <th>Telefon</th>
+                <th>Akcije</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (u of pendingUsers; track u._id) {
+                <tr>
+                  <td class="username-cell">
+                    @if (u.profilePicture) {
+                      <img class="table-avatar" [src]="u.profilePicture" alt="" />
+                    } @else {
+                      <div class="table-avatar-placeholder">{{ u.firstName?.[0] }}{{ u.lastName?.[0] }}</div>
+                    }
+                    <span>{{ u.username }}</span>
+                  </td>
+                  <td>{{ u.firstName }} {{ u.lastName }}</td>
+                  <td><span class="role-badge" [class]="'role-' + u.role">{{ roleLabel(u.role) }}</span></td>
+                  <td>{{ u.email }}</td>
+                  <td>{{ u.phone }}</td>
+                  <td class="actions-cell">
+                    <button class="btn btn-approve" (click)="approve(u._id)">Odobri</button>
+                    <button class="btn btn-reject" (click)="reject(u._id)">Odbij</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
+
+    <!-- All users tab -->
+    @if (activeTab === 'users') {
+      <div class="table-card">
+        @if (allUsers.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">👤</div>
+            <p>Nema korisnika u sistemu.</p>
+          </div>
+        } @else {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Korisnik</th>
+                <th>Ime i prezime</th>
+                <th>Uloga</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Akcije</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (u of allUsers; track u._id) {
+                <tr [class.row-blocked]="u.status === 'blocked'">
+                  <td class="username-cell">
+                    @if (u.profilePicture) {
+                      <img class="table-avatar" [src]="u.profilePicture" alt="" />
+                    } @else {
+                      <div class="table-avatar-placeholder">{{ u.firstName?.[0] }}{{ u.lastName?.[0] }}</div>
+                    }
+                    <span>{{ u.username }}</span>
+                  </td>
+                  <td>{{ u.firstName }} {{ u.lastName }}</td>
+                  <td><span class="role-badge" [class]="'role-' + u.role">{{ roleLabel(u.role) }}</span></td>
+                  <td>{{ u.email }}</td>
+                  <td>
+                    <span class="status-badge" [class]="'status-' + u.status">
+                      {{ statusLabel(u.status) }}
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    @if (u.status === 'blocked') {
+                      <button class="btn btn-unblock" (click)="unblockUser(u._id)">Odblokiraj</button>
+                    } @else {
+                      <button class="btn btn-block" (click)="blockUser(u._id)">Blokiraj</button>
+                    }
+                    <button class="btn btn-delete" (click)="deleteUser(u._id)">Obriši</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
+
+  </main>
+</div>

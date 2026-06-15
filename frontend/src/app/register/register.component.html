@@ -1,0 +1,194 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>Registracija</h2>
+
+    <!-- Role selector -->
+    <div class="role-tabs">
+      <button type="button" class="role-tab" [class.active]="selectedRole === 'athlete'" (click)="selectRole('athlete')">
+        🏃 Sportista
+      </button>
+      <button type="button" class="role-tab" [class.active]="selectedRole === 'employee'" (click)="selectRole('employee')">
+        🏢 Zaposleni
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">{{ errorMessage }}</div>
+    }
+    @if (successMessage) {
+      <div class="alert alert-success">{{ successMessage }}</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <!-- Osnovni podaci -->
+      <div class="section-title">Osnovni podaci</div>
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>Korisničko ime *</label>
+          <input type="text" formControlName="username" class="form-control"
+                 [class.is-invalid]="invalid('username') || usernameAvailable === false"
+                 [class.is-valid]="usernameAvailable === true"
+                 placeholder="npr. marko_petrovic" />
+          @if (invalid('username')) {
+            <div class="invalid-feedback">Korisničko ime je obavezno (min. 3 karaktera)</div>
+          } @else if (checkingUsername) {
+            <div class="field-hint">Proveravam dostupnost...</div>
+          } @else if (usernameAvailable === false) {
+            <div class="invalid-feedback">Korisničko ime je već zauzeto.</div>
+          } @else if (usernameAvailable === true) {
+            <div class="valid-feedback">Korisničko ime je dostupno.</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Lozinka *</label>
+          <input type="password" formControlName="password" class="form-control"
+                 [class.is-invalid]="invalid('password')" placeholder="npr. Marko1!" />
+          <div class="password-hint">
+            8–12 znakova · počinje slovom · barem jedno veliko slovo · broj · specijalni znak (!&#64;#$%)
+          </div>
+          @if (invalid('password') && passwordErrors.length > 0) {
+            <div class="invalid-feedback">
+              @for (e of passwordErrors; track e) {
+                <div>• {{ e }}</div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Ime *</label>
+          <input type="text" formControlName="firstName" class="form-control"
+                 [class.is-invalid]="invalid('firstName')" placeholder="Vaše ime" />
+          @if (invalid('firstName')) {
+            <div class="invalid-feedback">Ime je obavezno</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Prezime *</label>
+          <input type="text" formControlName="lastName" class="form-control"
+                 [class.is-invalid]="invalid('lastName')" placeholder="Vaše prezime" />
+          @if (invalid('lastName')) {
+            <div class="invalid-feedback">Prezime je obavezno</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" formControlName="email" class="form-control"
+                 [class.is-invalid]="invalid('email')" placeholder="email@primer.com" />
+          @if (invalid('email')) {
+            <div class="invalid-feedback">Unesite ispravnu email adresu</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Kontakt telefon *</label>
+          <input type="text" formControlName="phone" class="form-control"
+                 [class.is-invalid]="invalid('phone')" placeholder="0641234567" />
+          @if (invalid('phone')) {
+            <div class="invalid-feedback">Unesite ispravan broj telefona (samo cifre)</div>
+          }
+        </div>
+
+      </div>
+
+      <!-- Profilna slika -->
+      <div class="section-title">Profilna slika</div>
+      <div class="picture-section">
+        <div class="picture-controls">
+          <label class="btn btn-outline btn-sm">
+            📎 Odaberi fajl
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+          </label>
+          <button type="button" class="btn btn-outline btn-sm" (click)="generateAvatar()">
+            🎨 Generiši avatar
+          </button>
+          @if (avatarGenerated) {
+            <button type="button" class="btn btn-secondary btn-sm" (click)="saveAvatarAsProfilePicture()">
+              💾 Sačuvaj kao profilnu sliku
+            </button>
+          }
+        </div>
+        <div class="picture-right">
+          @if (previewUrl) {
+            <img class="picture-preview" [src]="previewUrl" alt="Pregled profilne slike" />
+          } @else {
+            <div class="picture-placeholder">Podrazumevana slika</div>
+          }
+        </div>
+      </div>
+
+      <!-- Sportovi -->
+      <div class="section-title">Sportovi (odaberite do 5) *</div>
+      <div class="sports-grid">
+        @for (sport of allSports; track sport) {
+          <div class="sport-chip" [class.selected]="isSportSelected(sport)"
+               [class.disabled]="!isSportSelected(sport) && selectedSports.length >= 5"
+               (click)="toggleSport(sport)">
+            {{ sport }}
+          </div>
+        }
+      </div>
+      <div class="sports-count">Odabrano: {{ selectedSports.length }} / 5</div>
+
+      <!-- Podaci o objektu (samo za zaposlene) -->
+      @if (selectedRole === 'employee') {
+        <div class="section-title">Podaci o sportskom objektu</div>
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Naziv objekta *</label>
+            <input type="text" formControlName="facilityName" class="form-control"
+                   [class.is-invalid]="invalid('facilityName')" placeholder="SC Tašmajdan" />
+            @if (invalid('facilityName')) {
+              <div class="invalid-feedback">Naziv objekta je obavezan</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Adresa sedišta *</label>
+            <input type="text" formControlName="facilityAddress" class="form-control"
+                   [class.is-invalid]="invalid('facilityAddress')" placeholder="Takovska 10, Beograd" />
+            @if (invalid('facilityAddress')) {
+              <div class="invalid-feedback">Adresa je obavezna</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Matični broj * <span class="hint-inline">(tačno 8 cifara)</span></label>
+            <input type="text" formControlName="registrationNumber" class="form-control"
+                   [class.is-invalid]="invalid('registrationNumber')"
+                   placeholder="12345678" maxlength="8" />
+            @if (invalid('registrationNumber')) {
+              <div class="invalid-feedback">Matični broj mora imati tačno 8 cifara</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>PIB * <span class="hint-inline">(9 cifara, ne počinje 0)</span></label>
+            <input type="text" formControlName="taxId" class="form-control"
+                   [class.is-invalid]="invalid('taxId')"
+                   placeholder="123456789" maxlength="9" />
+            @if (invalid('taxId')) {
+              <div class="invalid-feedback">PIB mora imati tačno 9 cifara i ne sme počinjati nulom</div>
+            }
+          </div>
+
+        </div>
+      }
+
+      <button type="submit" class="btn btn-primary btn-full" [disabled]="isLoading">
+        @if (isLoading) { Slanje zahteva... } @else { Registruj se }
+      </button>
+
+    </form>
+
+    <div class="form-footer">
+      <p>Već imate nalog? <a routerLink="/login">Prijavite se</a></p>
+    </div>
+  </div>
+</div>
