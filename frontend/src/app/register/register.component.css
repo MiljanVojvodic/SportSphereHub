@@ -192,44 +192,115 @@
   padding: 0.5rem;
 }
 
-/* ── Sports ─────────────────────────────────────── */
-.sports-grid {
+/* ── Sports dropdown ─────────────────────────────── */
+.sports-dropdown-wrapper {
+  position: relative;
+}
+
+.sports-dropdown-toggle {
+  width: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.sport-chip {
-  padding: 0.4rem 0.9rem;
-  border-radius: 20px;
-  border: 2px solid #ddd;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.95rem;
   cursor: pointer;
-  font-size: 0.85rem;
-  color: #555;
-  transition: all 0.2s;
-  user-select: none;
+  text-align: left;
+  transition: border-color 0.2s;
 }
 
-.sport-chip:hover:not(.disabled) {
+.sports-dropdown-toggle:hover,
+.sports-dropdown-toggle:focus {
   border-color: #667eea;
-  color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.sport-chip.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: transparent;
-  color: white;
+.sports-toggle-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #333;
 }
 
-.sport-chip.disabled {
+.sports-toggle-label:empty::before,
+.sports-toggle-placeholder {
+  color: #aaa;
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  color: #666;
+  margin-left: 0.5rem;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.sports-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+}
+
+.sports-dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 11;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.sports-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  color: #333;
+}
+
+.sports-dropdown-item:hover:not(.disabled) {
+  background: #f0f2ff;
+}
+
+.sports-dropdown-item.selected {
+  background: #eef0ff;
+  color: #5a6fd6;
+  font-weight: 500;
+}
+
+.sports-dropdown-item.disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.sport-check {
+  width: 1rem;
+  color: #667eea;
+  font-weight: 700;
+  font-size: 0.85rem;
 }
 
 .sports-count {
   font-size: 0.8rem;
   color: #888;
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
 }
 
 /* ── Buttons ─────────────────────────────────────── */

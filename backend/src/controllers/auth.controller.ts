@@ -1,16 +1,31 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import UserModel from '../models/User';
 import { comparePassword, createToken, hashPassword } from '../utils/crypto';
+
+function savePicture(base64Data: string, username: string): string {
+    if (!base64Data || !base64Data.startsWith('data:')) return '';
+    const match = base64Data.match(/^data:([a-zA-Z+/\-]+);base64,(.+)$/);
+    if (!match) return '';
+    const ext = match[1].includes('png') ? 'png' : 'jpg';
+    const filename = `${username}_${Date.now()}.${ext}`;
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    try {
+        fs.writeFileSync(path.join(uploadsDir, filename), Buffer.from(match[2], 'base64'));
+        return `/uploads/${filename}`;
+    } catch {
+        return '';
+    }
+}
 
 export class AuthController {
 
     checkUsername = (req: express.Request, res: express.Response) => {
-        let username = req.query['username'] as string;
-        if (!username) {
-            res.json({ available: true });
-            return;
-        }
-        UserModel.findOne({ username: username }).then((user: any) => {
+        const username = req.query['username'] as string;
+        if (!username) { res.json({ available: true }); return; }
+        UserModel.findOne({ username }).then((user: any) => {
             res.json({ available: !user });
         }).catch(() => {
             res.json({ available: true });
@@ -18,15 +33,14 @@ export class AuthController {
     }
 
     login = (req: express.Request, res: express.Response) => {
-        let username = req.body.username;
-        let password = req.body.password;
+        const { username, password } = req.body;
 
         if (!username || !password) {
             res.status(400).json({ message: 'Korisničko ime i lozinka su obavezni' });
             return;
         }
 
-        UserModel.findOne({ username: username }).then((user: any) => {
+        UserModel.findOne({ username }).then((user: any) => {
             if (!user) {
                 res.status(401).json({ message: 'Pogrešno korisničko ime ili lozinka' });
                 return;
@@ -67,11 +81,10 @@ export class AuthController {
     }
 
     register = (req: express.Request, res: express.Response) => {
-        let { username, password, firstName, lastName, phone, email,
-              role, sports, profilePicture,
-              facilityName, facilityAddress, registrationNumber, taxId } = req.body;
+        const { username, password, firstName, lastName, phone, email,
+                role, sports, profilePicture,
+                facilityName, facilityAddress, registrationNumber, taxId } = req.body;
 
-        // Server validation
         if (!username || !password || !firstName || !lastName || !phone || !email || !role) {
             res.status(400).json({ message: 'Sva obavezna polja moraju biti popunjena' });
             return;
@@ -99,8 +112,7 @@ export class AuthController {
             }
         }
 
-        // Check username and email uniqueness
-        UserModel.findOne({ $or: [{ username: username }, { email: email }] }).then((existing: any) => {
+        UserModel.findOne({ $or: [{ username }, { email }] }).then((existing: any) => {
             if (existing) {
                 if (existing.username === username) {
                     res.status(409).json({ message: 'Korisničko ime je već zauzeto' });
@@ -110,9 +122,8 @@ export class AuthController {
                 return;
             }
 
-            // Check max 2 employees per facility
             const countPromise = role === 'employee'
-                ? UserModel.countDocuments({ registrationNumber: registrationNumber, role: 'employee' })
+                ? UserModel.countDocuments({ registrationNumber, role: 'employee' })
                 : Promise.resolve(0);
 
             countPromise.then((empCount: number) => {
@@ -121,16 +132,18 @@ export class AuthController {
                     return;
                 }
 
+                const picturePath = savePicture(profilePicture || '', username);
+
                 const newUser: any = {
-                    username: username,
+                    username,
                     password: hashPassword(password),
-                    firstName: firstName,
-                    lastName: lastName,
-                    phone: phone,
-                    email: email,
-                    role: role,
+                    firstName,
+                    lastName,
+                    phone,
+                    email,
+                    role,
                     sports: sports || [],
-                    profilePicture: profilePicture || '',
+                    profilePicture: picturePath,
                     status: 'pending'
                 };
 
@@ -141,33 +154,12 @@ export class AuthController {
                     newUser.taxId = taxId;
                 }
 
-                if (role === 'athlete') {
-                    newUser.status = 'approved';
-                    UserModel.create(newUser).then((created: any) => {
-                        const token = createToken({ id: String(created._id), username: created.username, role: created.role });
-                        res.json({
-                            token,
-                            user: {
-                                id: created._id,
-                                username: created.username,
-                                firstName: created.firstName,
-                                lastName: created.lastName,
-                                email: created.email,
-                                role: created.role,
-                                profilePicture: created.profilePicture
-                            },
-                            message: 'Registracija uspešna! Dobrodošli u SportSphere.'
-                        });
-                    }).catch(() => {
-                        res.status(500).json({ message: 'Greška pri čuvanju korisnika' });
-                    });
-                } else {
-                    UserModel.create(newUser).then(() => {
-                        res.json({ message: 'Zahtev za registraciju je uspešno kreiran. Sačekajte odobrenje administratora.' });
-                    }).catch(() => {
-                        res.status(500).json({ message: 'Greška pri čuvanju korisnika' });
-                    });
-                }
+                UserModel.create(newUser).then(() => {
+                    res.json({ message: 'Zahtev za registraciju je uspešno kreiran. Sačekajte odobrenje administratora.' });
+                }).catch(() => {
+                    res.status(500).json({ message: 'Greška pri čuvanju korisnika' });
+                });
+
             }).catch(() => {
                 res.status(500).json({ message: 'Greška na serveru' });
             });

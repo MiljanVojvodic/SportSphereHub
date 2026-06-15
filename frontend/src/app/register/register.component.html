@@ -123,17 +123,42 @@
       </div>
 
       <!-- Sportovi -->
-      <div class="section-title">Sportovi (odaberite do 5) *</div>
-      <div class="sports-grid">
-        @for (sport of allSports; track sport) {
-          <div class="sport-chip" [class.selected]="isSportSelected(sport)"
-               [class.disabled]="!isSportSelected(sport) && selectedSports.length >= 5"
-               (click)="toggleSport(sport)">
-            {{ sport }}
+      <div class="section-title">Sportovi *</div>
+      <div class="sports-dropdown-wrapper">
+        <button type="button" class="sports-dropdown-toggle" (click)="toggleSportsDropdown()">
+          <span class="sports-toggle-label">
+            @if (selectedSports.length === 0) {
+              Odaberite sportove...
+            } @else {
+              {{ selectedSports.join(', ') }}
+            }
+          </span>
+          <span class="dropdown-arrow" [class.open]="sportsDropdownOpen">&#9660;</span>
+        </button>
+
+        @if (sportsDropdownOpen) {
+          <div class="sports-dropdown-backdrop" (click)="sportsDropdownOpen = false"></div>
+          <div class="sports-dropdown-list">
+            @for (sport of allSports; track sport) {
+              <div class="sports-dropdown-item"
+                   [class.selected]="isSportSelected(sport)"
+                   [class.disabled]="!isSportSelected(sport) && selectedSports.length >= 5"
+                   (click)="toggleSport(sport)">
+                <span class="sport-check">@if (isSportSelected(sport)) { ✓ }</span>
+                {{ sport }}
+              </div>
+            }
           </div>
         }
+
+        <div class="sports-count">
+          @if (selectedSports.length === 0) {
+            Nijedan sport nije odabran
+          } @else {
+            Odabrano {{ selectedSports.length }} / 5
+          }
+        </div>
       </div>
-      <div class="sports-count">Odabrano: {{ selectedSports.length }} / 5</div>
 
       <!-- Podaci o objektu (samo za zaposlene) -->
       @if (selectedRole === 'employee') {

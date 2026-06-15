@@ -36,6 +36,7 @@ export class RegisterComponent {
   isLoading = false;
   usernameAvailable: boolean | null = null;
   checkingUsername = false;
+  sportsDropdownOpen = false;
 
   readonly allSports = [
     'Fudbal', 'Košarka', 'Tenis', 'Odbojka', 'Plivanje',
@@ -98,12 +99,16 @@ export class RegisterComponent {
     emp.forEach(field => this.f(field).updateValueAndValidity());
   }
 
+  toggleSportsDropdown() {
+    this.sportsDropdownOpen = !this.sportsDropdownOpen;
+  }
+
   toggleSport(sport: string) {
     const idx = this.selectedSports.indexOf(sport);
     if (idx > -1) {
-      this.selectedSports.splice(idx, 1);
+      this.selectedSports = this.selectedSports.filter(s => s !== sport);
     } else if (this.selectedSports.length < 5) {
-      this.selectedSports.push(sport);
+      this.selectedSports = [...this.selectedSports, sport];
     }
   }
 
@@ -150,9 +155,11 @@ export class RegisterComponent {
       this.avatarUrl = '';
     };
     img.onerror = () => {
-      this.profilePictureBase64 = this.avatarUrl;
-      this.previewUrl = this.avatarUrl;
+      this.errorMessage = 'Nije moguće konvertovati avatar. Otpremite sliku ručno.';
+      this.avatarUrl = '';
+      this.previewUrl = '';
       this.avatarGenerated = false;
+      this.profilePictureBase64 = '';
     };
     img.src = this.avatarUrl;
   }
@@ -185,15 +192,8 @@ export class RegisterComponent {
     this.http.post<any>('http://localhost:4000/api/auth/register', body).subscribe({
       next: (res) => {
         this.isLoading = false;
-        if (res.token) {
-          localStorage.setItem('token', res.token);
-          localStorage.setItem('user', JSON.stringify(res.user));
-          this.successMessage = 'Registracija uspešna! Preusmeravanje...';
-          setTimeout(() => this.router.navigate(['/athlete']), 1200);
-        } else {
-          this.successMessage = res.message || 'Zahtev poslat! Sačekajte odobrenje administratora.';
-          setTimeout(() => this.router.navigate(['/employee']), 3000);
-        }
+        this.successMessage = res.message || 'Zahtev poslat. Sačekajte odobrenje administratora.';
+        setTimeout(() => this.router.navigate(['/login']), 3000);
       },
       error: (err: HttpErrorResponse) => {
         this.isLoading = false;

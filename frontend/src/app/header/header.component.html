@@ -10,8 +10,8 @@
       @if (isLoggedIn) {
         <a class="nav-link" routerLink="/">Početna</a>
         <a class="nav-link" [routerLink]="dashboardRoute">
-          @if (currentUser?.profilePicture) {
-            <img class="nav-avatar" [src]="currentUser!.profilePicture" alt="" />
+          @if (getImageUrl(currentUser?.profilePicture)) {
+            <img class="nav-avatar" [src]="getImageUrl(currentUser?.profilePicture)" alt="" />
           } @else {
             <span class="nav-initials">{{ currentUser?.firstName?.[0] }}{{ currentUser?.lastName?.[0] }}</span>
           }

@@ -10,8 +10,8 @@ import { Router } from '@angular/router';
       <div class="card">
         @if (user) {
           <div class="avatar-row">
-            @if (user.profilePicture) {
-              <img class="avatar" [src]="user.profilePicture" alt="Profilna slika" />
+            @if (getImageUrl(user.profilePicture)) {
+              <img class="avatar" [src]="getImageUrl(user.profilePicture)" alt="Profilna slika" />
             } @else {
               <div class="avatar-placeholder">{{ initials }}</div>
             }
@@ -61,6 +61,12 @@ export class AthleteComponent implements OnInit {
   }
 
   constructor(private router: Router) {}
+
+  getImageUrl(picture: string): string {
+    if (!picture) return '';
+    if (picture.startsWith('/uploads/')) return `http://localhost:4000${picture}`;
+    return picture;
+  }
 
   ngOnInit() {
     const stored = localStorage.getItem('user');

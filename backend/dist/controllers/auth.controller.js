@@ -4,30 +4,50 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const User_1 = __importDefault(require("../models/User"));
 const crypto_1 = require("../utils/crypto");
+function savePicture(base64Data, username) {
+    if (!base64Data || !base64Data.startsWith('data:'))
+        return '';
+    const match = base64Data.match(/^data:([a-zA-Z+/\-]+);base64,(.+)$/);
+    if (!match)
+        return '';
+    const ext = match[1].includes('png') ? 'png' : 'jpg';
+    const filename = `${username}_${Date.now()}.${ext}`;
+    const uploadsDir = path_1.default.join(__dirname, '..', '..', 'uploads');
+    if (!fs_1.default.existsSync(uploadsDir))
+        fs_1.default.mkdirSync(uploadsDir, { recursive: true });
+    try {
+        fs_1.default.writeFileSync(path_1.default.join(uploadsDir, filename), Buffer.from(match[2], 'base64'));
+        return `/uploads/${filename}`;
+    }
+    catch {
+        return '';
+    }
+}
 class AuthController {
     constructor() {
         this.checkUsername = (req, res) => {
-            let username = req.query['username'];
+            const username = req.query['username'];
             if (!username) {
                 res.json({ available: true });
                 return;
             }
-            User_1.default.findOne({ username: username }).then((user) => {
+            User_1.default.findOne({ username }).then((user) => {
                 res.json({ available: !user });
             }).catch(() => {
                 res.json({ available: true });
             });
         };
         this.login = (req, res) => {
-            let username = req.body.username;
-            let password = req.body.password;
+            const { username, password } = req.body;
             if (!username || !password) {
                 res.status(400).json({ message: 'Korisničko ime i lozinka su obavezni' });
                 return;
             }
-            User_1.default.findOne({ username: username }).then((user) => {
+            User_1.default.findOne({ username }).then((user) => {
                 if (!user) {
                     res.status(401).json({ message: 'Pogrešno korisničko ime ili lozinka' });
                     return;
@@ -66,8 +86,7 @@ class AuthController {
             });
         };
         this.register = (req, res) => {
-            let { username, password, firstName, lastName, phone, email, role, sports, profilePicture, facilityName, facilityAddress, registrationNumber, taxId } = req.body;
-            // Server validation
+            const { username, password, firstName, lastName, phone, email, role, sports, profilePicture, facilityName, facilityAddress, registrationNumber, taxId } = req.body;
             if (!username || !password || !firstName || !lastName || !phone || !email || !role) {
                 res.status(400).json({ message: 'Sva obavezna polja moraju biti popunjena' });
                 return;
@@ -92,8 +111,7 @@ class AuthController {
                     return;
                 }
             }
-            // Check username and email uniqueness
-            User_1.default.findOne({ $or: [{ username: username }, { email: email }] }).then((existing) => {
+            User_1.default.findOne({ $or: [{ username }, { email }] }).then((existing) => {
                 if (existing) {
                     if (existing.username === username) {
                         res.status(409).json({ message: 'Korisničko ime je već zauzeto' });
@@ -103,25 +121,25 @@ class AuthController {
                     }
                     return;
                 }
-                // Check max 2 employees per facility
                 const countPromise = role === 'employee'
-                    ? User_1.default.countDocuments({ registrationNumber: registrationNumber, role: 'employee' })
+                    ? User_1.default.countDocuments({ registrationNumber, role: 'employee' })
                     : Promise.resolve(0);
                 countPromise.then((empCount) => {
                     if (role === 'employee' && empCount >= 2) {
                         res.status(409).json({ message: 'Objekat već ima maksimalan broj zaposlenih (2)' });
                         return;
                     }
+                    const picturePath = savePicture(profilePicture || '', username);
                     const newUser = {
-                        username: username,
+                        username,
                         password: (0, crypto_1.hashPassword)(password),
-                        firstName: firstName,
-                        lastName: lastName,
-                        phone: phone,
-                        email: email,
-                        role: role,
+                        firstName,
+                        lastName,
+                        phone,
+                        email,
+                        role,
                         sports: sports || [],
-                        profilePicture: profilePicture || '',
+                        profilePicture: picturePath,
                         status: 'pending'
                     };
                     if (role === 'employee') {
@@ -130,34 +148,11 @@ class AuthController {
                         newUser.registrationNumber = registrationNumber;
                         newUser.taxId = taxId;
                     }
-                    if (role === 'athlete') {
-                        newUser.status = 'approved';
-                        User_1.default.create(newUser).then((created) => {
-                            const token = (0, crypto_1.createToken)({ id: String(created._id), username: created.username, role: created.role });
-                            res.json({
-                                token,
-                                user: {
-                                    id: created._id,
-                                    username: created.username,
-                                    firstName: created.firstName,
-                                    lastName: created.lastName,
-                                    email: created.email,
-                                    role: created.role,
-                                    profilePicture: created.profilePicture
-                                },
-                                message: 'Registracija uspešna! Dobrodošli u SportSphere.'
-                            });
-                        }).catch(() => {
-                            res.status(500).json({ message: 'Greška pri čuvanju korisnika' });
-                        });
-                    }
-                    else {
-                        User_1.default.create(newUser).then(() => {
-                            res.json({ message: 'Zahtev za registraciju je uspešno kreiran. Sačekajte odobrenje administratora.' });
-                        }).catch(() => {
-                            res.status(500).json({ message: 'Greška pri čuvanju korisnika' });
-                        });
-                    }
+                    User_1.default.create(newUser).then(() => {
+                        res.json({ message: 'Zahtev za registraciju je uspešno kreiran. Sačekajte odobrenje administratora.' });
+                    }).catch(() => {
+                        res.status(500).json({ message: 'Greška pri čuvanju korisnika' });
+                    });
                 }).catch(() => {
                     res.status(500).json({ message: 'Greška na serveru' });
                 });

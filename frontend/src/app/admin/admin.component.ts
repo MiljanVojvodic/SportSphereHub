@@ -127,6 +127,12 @@ export class AdminComponent implements OnInit {
     return this.allUsers.filter(u => u.status === 'blocked').length;
   }
 
+  getImageUrl(picture: string): string {
+    if (!picture) return '';
+    if (picture.startsWith('/uploads/')) return `http://localhost:4000${picture}`;
+    return picture;
+  }
+
   roleLabel(role: string): string {
     if (role === 'athlete') return 'Sportista';
     if (role === 'employee') return 'Zaposleni';

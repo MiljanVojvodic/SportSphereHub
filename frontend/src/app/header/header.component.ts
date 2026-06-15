@@ -28,6 +28,12 @@ export class HeaderComponent {
     return '/athlete';
   }
 
+  getImageUrl(picture: string | undefined): string {
+    if (!picture) return '';
+    if (picture.startsWith('/uploads/')) return `http://localhost:4000${picture}`;
+    return picture;
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/']);
