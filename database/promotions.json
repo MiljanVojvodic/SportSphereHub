@@ -1,0 +1,35 @@
+[
+  {
+    "_id": { "$oid": "665f000000000000000000c1" },
+    "name": "Letnja teniška ponuda",
+    "facility": { "$oid": "665f000000000000000000a1" },
+    "startDate": { "$date": "2026-06-01T00:00:00.000Z" },
+    "endDate": { "$date": "2026-07-31T23:59:59.000Z" },
+    "discountType": "percentage",
+    "discountValue": 20,
+    "sport": "Tenis",
+    "active": true
+  },
+  {
+    "_id": { "$oid": "665f000000000000000000c2" },
+    "name": "Košarkaški vikend",
+    "facility": { "$oid": "665f000000000000000000a2" },
+    "startDate": { "$date": "2026-06-01T00:00:00.000Z" },
+    "endDate": { "$date": "2026-07-15T23:59:59.000Z" },
+    "discountType": "fixed",
+    "discountValue": 500,
+    "sport": "Košarka",
+    "active": true
+  },
+  {
+    "_id": { "$oid": "665f000000000000000000c3" },
+    "name": "Fudbal za sve",
+    "facility": { "$oid": "665f000000000000000000a3" },
+    "startDate": { "$date": "2026-06-01T00:00:00.000Z" },
+    "endDate": { "$date": "2026-08-31T23:59:59.000Z" },
+    "discountType": "percentage",
+    "discountValue": 15,
+    "sport": "Fudbal",
+    "active": true
+  }
+]

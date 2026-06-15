@@ -1,0 +1,51 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Пријава</h2>
+    <p class="subtitle">Унесите своје креденцијале</p>
+
+    @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Корисничко ime</label>
+        <input
+          type="text"
+          id="username"
+          class="form-control"
+          formControlName="username"
+          placeholder="Унесите корисничко ime"
+          [class.is-invalid]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+        />
+        @if (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) {
+          <div class="invalid-feedback">Корисничко ime је обавезно</div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Лозинка</label>
+        <input
+          type="password"
+          id="password"
+          class="form-control"
+          formControlName="password"
+          placeholder="Унесите лозинку"
+          [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        />
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <div class="invalid-feedback">Лозинка је обавезна</div>
+        }
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+        @if (isLoading) { Учитавање... } @else { Пријави ме }
+      </button>
+    </form>
+
+    <div class="form-footer">
+      <p><a routerLink="/forgot-password">Заборавили сте лозинку?</a></p>
+      <p>Немате налог? <a routerLink="/register">Региструјте се</a></p>
+    </div>
+  </div>
+</div>

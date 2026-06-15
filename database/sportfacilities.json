@@ -1,0 +1,106 @@
+[
+  {
+    "_id": { "$oid": "665f000000000000000000a1" },
+    "name": "SC Tašmajdan",
+    "city": "Beograd",
+    "address": "Takovska 10, Beograd",
+    "sports": ["Fudbal", "Košarka", "Tenis"],
+    "status": "active",
+    "likes": 145,
+    "dislikes": 12,
+    "images": [],
+    "hourlyRate": 1500,
+    "workingHours": { "from": "07:00", "to": "22:00" },
+    "maxNoShows": 3,
+    "description": "Moderni sportski centar u srcu Beograda sa izvrsnim sadržajima za sve uzraste.",
+    "employees": [],
+    "courts": [
+      { "name": "Fudbalski teren 1", "type": "outdoor", "capacity": 22, "sport": "Fudbal", "description": "Otvoreni fudbalski teren sa prirodnom travom" },
+      { "name": "Košarkaška sala A", "type": "indoor", "capacity": 20, "sport": "Košarka", "description": "Zatvorena košarkaška sala sa parketing podom" },
+      { "name": "Teniski teren 1", "type": "outdoor", "capacity": 4, "sport": "Tenis", "description": "Teniski teren sa šljačom" },
+      { "name": "Teniski teren 2", "type": "indoor", "capacity": 4, "sport": "Tenis", "description": "Zatvoreni teniski teren sa tvrdim podom" }
+    ]
+  },
+  {
+    "_id": { "$oid": "665f000000000000000000a2" },
+    "name": "Sportski Centar Novi Beograd",
+    "city": "Beograd",
+    "address": "Omladinskih Brigada 7, Novi Beograd",
+    "sports": ["Košarka", "Odbojka", "Stoni tenis"],
+    "status": "active",
+    "likes": 87,
+    "dislikes": 5,
+    "images": [],
+    "hourlyRate": 1200,
+    "workingHours": { "from": "08:00", "to": "21:00" },
+    "maxNoShows": 2,
+    "description": "Savremeni sportski centar na Novom Beogradu sa profesionalnom opremom.",
+    "employees": [],
+    "courts": [
+      { "name": "Košarkaška sala A", "type": "indoor", "capacity": 20, "sport": "Košarka", "description": "Glavna košarkaška sala sa tribinama" },
+      { "name": "Odbojkaška sala", "type": "indoor", "capacity": 14, "sport": "Odbojka", "description": "Sala za odbojku sa parket podom" },
+      { "name": "Sala za stoni tenis", "type": "indoor", "capacity": 8, "sport": "Stoni tenis", "description": "Prostorija sa 4 stola za stoni tenis" }
+    ]
+  },
+  {
+    "_id": { "$oid": "665f000000000000000000a3" },
+    "name": "Sportska Hala Zemun",
+    "city": "Zemun",
+    "address": "Cara Dušana 35, Zemun",
+    "sports": ["Fudbal", "Tenis", "Odbojka"],
+    "status": "active",
+    "likes": 62,
+    "dislikes": 8,
+    "images": [],
+    "hourlyRate": 1000,
+    "workingHours": { "from": "09:00", "to": "21:00" },
+    "maxNoShows": 3,
+    "description": "Sportska hala u Zemunu sa više terena i pristupačnim cenama.",
+    "employees": [],
+    "courts": [
+      { "name": "Mali fudbal - teren 1", "type": "outdoor", "capacity": 12, "sport": "Fudbal", "description": "Otvoreni teren za mali fudbal sa veštačkom travom" },
+      { "name": "Teniski teren Zemun", "type": "indoor", "capacity": 4, "sport": "Tenis", "description": "Zatvoreni teniski teren sa tvrdim podom" },
+      { "name": "Odbojkaška dvorana", "type": "indoor", "capacity": 14, "sport": "Odbojka", "description": "Dvorana za odbojku" }
+    ]
+  },
+  {
+    "_id": { "$oid": "665f000000000000000000a4" },
+    "name": "Sportski Centar Subotica",
+    "city": "Subotica",
+    "address": "Segedinski put 14, Subotica",
+    "sports": ["Košarka", "Džudo"],
+    "status": "pending",
+    "likes": 0,
+    "dislikes": 0,
+    "images": [],
+    "hourlyRate": 800,
+    "workingHours": { "from": "08:00", "to": "20:00" },
+    "maxNoShows": 3,
+    "description": "Novi sportski centar u Subotici, čeka odobrenje administratora.",
+    "employees": [],
+    "courts": [
+      { "name": "Košarkaška sala", "type": "indoor", "capacity": 20, "sport": "Košarka", "description": "Sala za košarku" },
+      { "name": "Džudo dvorana", "type": "indoor", "capacity": 16, "sport": "Džudo", "description": "Dvorana za džudo sa tatami podlogom" }
+    ]
+  },
+  {
+    "_id": { "$oid": "665f000000000000000000a5" },
+    "name": "Atletski Klub Niš",
+    "city": "Niš",
+    "address": "Bulevar Svetog Cara Konstantina 80, Niš",
+    "sports": ["Atletika", "Fudbal"],
+    "status": "active",
+    "likes": 34,
+    "dislikes": 3,
+    "images": [],
+    "hourlyRate": 700,
+    "workingHours": { "from": "07:00", "to": "20:00" },
+    "maxNoShows": 3,
+    "description": "Atletski centar u Nišu sa profesionalnim atletskim stazama.",
+    "employees": [],
+    "courts": [
+      { "name": "Atletska staza", "type": "outdoor", "capacity": 40, "sport": "Atletika", "description": "Profesionalna atletska staza sa 8 traka" },
+      { "name": "Fudbalski teren", "type": "outdoor", "capacity": 22, "sport": "Fudbal", "description": "Teren sa prirodnom travom" }
+    ]
+  }
+]
