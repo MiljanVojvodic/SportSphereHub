@@ -1,66 +1,278 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-employee',
   standalone: true,
-  imports: [],
-  template: `
-    <div class="page-wrapper">
-      <div class="card">
-        @if (user) {
-          <div class="avatar-row">
-            @if (getImageUrl(user.profilePicture)) {
-              <img class="avatar" [src]="getImageUrl(user.profilePicture)" alt="Profilna slika" />
-            } @else {
-              <div class="avatar-placeholder">{{ initials }}</div>
-            }
-          </div>
-          <h1>Dobrodošli, {{ user.firstName }}!</h1>
-          <p class="subtitle">Prijavljeni ste kao <strong>Zaposleni</strong></p>
-          <div class="info-grid">
-            <div class="info-item"><span class="label">Korisnik</span><span>{{ user.username }}</span></div>
-            <div class="info-item"><span class="label">Email</span><span>{{ user.email }}</span></div>
-          </div>
-          <p class="wip">Dashboard zaposlenog je u izradi.</p>
-          <button class="btn-logout" (click)="logout()">Odjavi se</button>
-        } @else {
-          <div class="pending-icon">⏳</div>
-          <h1>Zahtev primljen!</h1>
-          <p class="subtitle">Vaša registracija zaposlenog je uspešno poslata.</p>
-          <p class="wip">Sačekajte odobrenje administratora. Kada vas administrator odobri, moći ćete da se prijavite.</p>
-          <a class="btn-link" href="/login">Idi na prijavu</a>
-        }
-      </div>
-    </div>
-  `,
-  styles: [`
-    .page-wrapper { display:flex; justify-content:center; align-items:center; min-height:80vh; padding:2rem; }
-    .card { background:white; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,.1); padding:2.5rem; text-align:center; max-width:440px; width:100%; }
-    .avatar { width:90px; height:90px; border-radius:50%; object-fit:cover; border:3px solid #10b981; margin-bottom:1rem; }
-    .avatar-placeholder { width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg,#10b981,#059669); display:flex; align-items:center; justify-content:center; font-size:2rem; color:white; font-weight:700; margin:0 auto 1rem; }
-    .avatar-row { display:flex; justify-content:center; }
-    h1 { color:#333; margin:.5rem 0; font-size:1.6rem; }
-    .subtitle { color:#666; margin-bottom:1.5rem; }
-    .info-grid { display:flex; flex-direction:column; gap:.5rem; margin:1rem 0 1.5rem; text-align:left; background:#f8f9fa; border-radius:8px; padding:1rem; }
-    .info-item { display:flex; justify-content:space-between; font-size:.9rem; }
-    .label { color:#888; font-weight:500; }
-    .wip { color:#888; font-size:.9rem; font-style:italic; margin-bottom:1.5rem; }
-    .pending-icon { font-size:3rem; margin-bottom:1rem; }
-    .btn-logout { background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; padding:.75rem 2rem; border-radius:6px; font-size:1rem; cursor:pointer; font-weight:500; }
-    .btn-logout:hover { opacity:.9; }
-    .btn-link { display:inline-block; background:linear-gradient(135deg,#10b981,#059669); color:white; text-decoration:none; padding:.75rem 2rem; border-radius:6px; font-size:1rem; font-weight:500; }
-  `]
+  imports: [FormsModule],
+  templateUrl: './employee.component.html',
+  styleUrl: './employee.component.css'
 })
 export class EmployeeComponent implements OnInit {
-  user: any = null;
+  @ViewChild('pictureInput') pictureInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('jsonInput') jsonInput!: ElementRef<HTMLInputElement>;
 
-  get initials(): string {
-    if (!this.user) return '';
-    return (this.user.firstName?.[0] ?? '') + (this.user.lastName?.[0] ?? '');
+  activeTab = 'profile';
+  profile: any = null;
+  facilities: any[] = [];
+  availableSports: string[] = [];
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+
+  // Profile form
+  profileForm = { firstName: '', lastName: '', phone: '', email: '', sports: [] as string[] };
+  newPictureData = '';
+  newPicturePreview = '';
+
+  // Facility list interaction
+  expandedFacilityId: string | null = null;
+  addCourtTargetId: string | null = null;
+  courtForm = { name: '', type: 'open', capacity: 4, sport: '', description: '' };
+
+  // Add facility panel
+  showAddFacility = false;
+  facilityForm = {
+    name: '', city: '', address: '',
+    sports: [] as string[],
+    hourlyRate: 0,
+    workingHoursFrom: '08:00', workingHoursTo: '22:00',
+    maxNoShows: 3,
+    description: ''
+  };
+  facilityCourtForm = { name: '', type: 'open', capacity: 4, sport: '', description: '' };
+  facilityCourts: any[] = [];
+  showFacilityCourtForm = false;
+
+  private apiUrl = 'http://localhost:4000/api';
+
+  constructor(private router: Router, private http: HttpClient) {}
+
+  ngOnInit() {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) { this.router.navigate(['/login']); return; }
+    const user = JSON.parse(userStr);
+    if (user.role !== 'employee') { this.router.navigate(['/login']); return; }
+    this.loadProfile();
+    this.loadFacilities();
+    this.loadSports();
   }
 
-  constructor(private router: Router) {}
+  private headers(): HttpHeaders {
+    return new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });
+  }
+
+  loadProfile() {
+    this.http.get<any>(`${this.apiUrl}/employee/profile`, { headers: this.headers() }).subscribe({
+      next: (p) => {
+        this.profile = p;
+        this.profileForm = {
+          firstName: p.firstName || '',
+          lastName: p.lastName || '',
+          phone: p.phone || '',
+          email: p.email || '',
+          sports: [...(p.sports || [])]
+        };
+      },
+      error: () => this.toast('Greška pri učitavanju profila', 'error')
+    });
+  }
+
+  saveProfile() {
+    const payload: any = { ...this.profileForm };
+    if (this.newPictureData) payload.profilePicture = this.newPictureData;
+
+    this.http.put<any>(`${this.apiUrl}/employee/profile`, payload, { headers: this.headers() }).subscribe({
+      next: (updated) => {
+        this.profile = updated;
+        this.newPictureData = '';
+        this.newPicturePreview = '';
+        const stored = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({
+          ...stored,
+          firstName: updated.firstName,
+          email: updated.email,
+          profilePicture: updated.profilePicture
+        }));
+        this.toast('Profil je uspešno ažuriran', 'success');
+      },
+      error: (err) => this.toast(err.error?.message || 'Greška pri ažuriranju', 'error')
+    });
+  }
+
+  triggerPictureInput() { this.pictureInput.nativeElement.click(); }
+
+  onPictureChange(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.newPictureData = e.target?.result as string;
+      this.newPicturePreview = this.newPictureData;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  toggleProfileSport(sport: string) {
+    const idx = this.profileForm.sports.indexOf(sport);
+    if (idx >= 0) {
+      this.profileForm.sports.splice(idx, 1);
+    } else if (this.profileForm.sports.length < 5) {
+      this.profileForm.sports.push(sport);
+    }
+  }
+
+  isProfileSportSelected(sport: string): boolean {
+    return this.profileForm.sports.includes(sport);
+  }
+
+  loadFacilities() {
+    this.http.get<any[]>(`${this.apiUrl}/employee/facilities`, { headers: this.headers() }).subscribe({
+      next: (f) => this.facilities = f,
+      error: () => this.toast('Greška pri učitavanju objekata', 'error')
+    });
+  }
+
+  loadSports() {
+    this.http.get<string[]>(`${this.apiUrl}/home/sports`).subscribe({
+      next: (s) => this.availableSports = s,
+      error: () => {
+        this.availableSports = [
+          'Fudbal', 'Košarka', 'Tenis', 'Odbojka', 'Plivanje',
+          'Atletika', 'Rukomet', 'Badminton', 'Stolni tenis',
+          'Squash', 'Fitnes', 'Boks', 'Džudo', 'Karate'
+        ];
+      }
+    });
+  }
+
+  toggleExpand(id: string) {
+    this.expandedFacilityId = this.expandedFacilityId === id ? null : id;
+    if (this.addCourtTargetId !== id) this.addCourtTargetId = null;
+  }
+
+  openAddCourt(id: string) {
+    this.addCourtTargetId = this.addCourtTargetId === id ? null : id;
+    this.courtForm = { name: '', type: 'open', capacity: 4, sport: '', description: '' };
+  }
+
+  submitAddCourt(facilityId: string) {
+    this.http.post<any>(
+      `${this.apiUrl}/employee/facilities/${facilityId}/courts`,
+      this.courtForm,
+      { headers: this.headers() }
+    ).subscribe({
+      next: (updated) => {
+        const idx = this.facilities.findIndex(f => f._id === facilityId);
+        if (idx >= 0) this.facilities[idx] = updated;
+        this.addCourtTargetId = null;
+        this.toast('Teren je dodat', 'success');
+      },
+      error: (err) => this.toast(err.error?.message || 'Greška pri dodavanju terena', 'error')
+    });
+  }
+
+  removeCourt(facilityId: string, courtName: string) {
+    if (!confirm(`Obrisati teren "${courtName}"?`)) return;
+    this.http.delete<any>(
+      `${this.apiUrl}/employee/facilities/${facilityId}/courts/${encodeURIComponent(courtName)}`,
+      { headers: this.headers() }
+    ).subscribe({
+      next: (updated) => {
+        const idx = this.facilities.findIndex(f => f._id === facilityId);
+        if (idx >= 0) this.facilities[idx] = updated;
+        this.toast('Teren je uklonjen', 'success');
+      },
+      error: (err) => this.toast(err.error?.message || 'Greška pri brisanju terena', 'error')
+    });
+  }
+
+  openAddFacility() {
+    this.showAddFacility = true;
+    this.facilityForm = {
+      name: '', city: '', address: '', sports: [],
+      hourlyRate: 0, workingHoursFrom: '08:00', workingHoursTo: '22:00',
+      maxNoShows: 3, description: ''
+    };
+    this.facilityCourts = [];
+    this.showFacilityCourtForm = false;
+    this.facilityCourtForm = { name: '', type: 'open', capacity: 4, sport: '', description: '' };
+  }
+
+  cancelAddFacility() { this.showAddFacility = false; }
+
+  toggleFacilitySport(sport: string) {
+    const idx = this.facilityForm.sports.indexOf(sport);
+    if (idx >= 0) { this.facilityForm.sports.splice(idx, 1); } else { this.facilityForm.sports.push(sport); }
+  }
+
+  isFacilitySportSelected(sport: string): boolean { return this.facilityForm.sports.includes(sport); }
+
+  addCourtToForm() {
+    if (!this.facilityCourtForm.name.trim()) { this.toast('Naziv terena je obavezan', 'error'); return; }
+    if (this.facilityCourts.some(c => c.name === this.facilityCourtForm.name)) {
+      this.toast('Teren sa tim nazivom već postoji', 'error'); return;
+    }
+    if (this.facilityCourtForm.type === 'open' && this.facilityCourtForm.capacity < 4) {
+      this.toast('Otvoreni teren mora imati kapacitet ≥ 4', 'error'); return;
+    }
+    this.facilityCourts.push({ ...this.facilityCourtForm });
+    this.facilityCourtForm = { name: '', type: 'open', capacity: 4, sport: '', description: '' };
+    this.showFacilityCourtForm = false;
+  }
+
+  removeCourtFromForm(name: string) {
+    this.facilityCourts = this.facilityCourts.filter(c => c.name !== name);
+  }
+
+  submitFacility() {
+    const payload = {
+      name: this.facilityForm.name,
+      city: this.facilityForm.city,
+      address: this.facilityForm.address,
+      sports: this.facilityForm.sports,
+      hourlyRate: this.facilityForm.hourlyRate,
+      workingHours: { from: this.facilityForm.workingHoursFrom, to: this.facilityForm.workingHoursTo },
+      maxNoShows: this.facilityForm.maxNoShows,
+      description: this.facilityForm.description,
+      courts: this.facilityCourts
+    };
+
+    this.http.post<any>(`${this.apiUrl}/employee/facilities`, payload, { headers: this.headers() }).subscribe({
+      next: (created) => {
+        this.facilities.push(created);
+        this.showAddFacility = false;
+        this.toast('Objekat je kreiran i čeka odobrenje administratora', 'success');
+      },
+      error: (err) => this.toast(err.error?.message || 'Greška pri dodavanju objekta', 'error')
+    });
+  }
+
+  triggerJsonInput() { this.jsonInput.nativeElement.click(); }
+
+  onJsonUpload(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        this.http.post<any>(`${this.apiUrl}/employee/facilities/json`, data, { headers: this.headers() }).subscribe({
+          next: (created) => {
+            this.facilities.push(created);
+            this.toast('Objekat je uvezen iz JSON-a i čeka odobrenje', 'success');
+          },
+          error: (err) => this.toast(err.error?.message || 'Greška pri uvozu JSON-a', 'error')
+        });
+      } catch {
+        this.toast('Neispravan JSON format fajla', 'error');
+      }
+    };
+    reader.readAsText(file);
+    (event.target as HTMLInputElement).value = '';
+  }
 
   getImageUrl(picture: string): string {
     if (!picture) return '';
@@ -68,12 +280,25 @@ export class EmployeeComponent implements OnInit {
     return picture;
   }
 
-  ngOnInit() {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      const u = JSON.parse(stored);
-      if (u.role === 'employee') this.user = u;
-    }
+  get initials(): string {
+    if (!this.profile) return '';
+    return (this.profile.firstName?.[0] ?? '') + (this.profile.lastName?.[0] ?? '');
+  }
+
+  statusLabel(status: string): string {
+    const map: any = { pending: 'Na čekanju', active: 'Aktivan', rejected: 'Odbijen' };
+    return map[status] ?? status;
+  }
+
+  courtTypeLabel(type: string): string {
+    const map: any = { open: 'Otvoreni', closed: 'Zatvoreni', hall: 'Dvorana' };
+    return map[type] ?? type;
+  }
+
+  toast(message: string, type: 'success' | 'error') {
+    this.toastMessage = message;
+    this.toastType = type;
+    setTimeout(() => this.toastMessage = '', 3500);
   }
 
   logout() {

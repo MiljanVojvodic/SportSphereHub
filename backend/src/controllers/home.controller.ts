@@ -1,6 +1,13 @@
 import express from 'express';
 import SportFacilityModel from '../models/SportFacility';
 import PromotionModel from '../models/Promotion';
+import SportModel from '../models/Sport';
+
+const DEFAULT_SPORTS = [
+    'Fudbal', 'Košarka', 'Tenis', 'Odbojka', 'Plivanje',
+    'Atletika', 'Rukomet', 'Badminton', 'Stolni tenis',
+    'Squash', 'Fitnes', 'Boks', 'Džudo', 'Karate'
+];
 
 export class HomeController {
 
@@ -26,5 +33,15 @@ export class HomeController {
         }).catch(() => {
             res.status(500).json({ message: 'Greška na serveru' });
         });
+    }
+
+    getSports = (req: express.Request, res: express.Response) => {
+        SportModel.find({ active: true }).select('name').then((sports: any[]) => {
+            if (sports.length > 0) {
+                res.json(sports.map((s: any) => s.name));
+            } else {
+                res.json(DEFAULT_SPORTS);
+            }
+        }).catch(() => res.json(DEFAULT_SPORTS));
     }
 }

@@ -132,7 +132,7 @@ export class AuthController {
                     return;
                 }
 
-                const picturePath = savePicture(profilePicture || '', username);
+                const picturePath = savePicture(profilePicture || '', username) || '/uploads/default-avatar.svg';
 
                 const newUser: any = {
                     username,

@@ -1,0 +1,411 @@
+﻿<div class="employee-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">🏟</span>
+      <span class="brand-name">SportSphere</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
+        <span class="nav-icon">👤</span>
+        <span>Profil</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab === 'facilities'" (click)="activeTab = 'facilities'">
+        <span class="nav-icon">🏟</span>
+        <span>Moji Objekti</span>
+        @if (facilities.length > 0) {
+          <span class="nav-badge">{{ facilities.length }}</span>
+        }
+      </button>
+    </nav>
+    <button class="sidebar-logout" (click)="logout()">
+      <span>🚪</span> Odjavi se
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <main class="employee-main">
+
+    <!-- Header -->
+    <header class="employee-header">
+      @if (activeTab === 'profile') {
+        <h1>Moj Profil</h1>
+        <p class="header-sub">Pregled i ažuriranje ličnih podataka</p>
+      } @else {
+        <h1>Moji Objekti</h1>
+        <p class="header-sub">Upravljanje sportskim objektima</p>
+      }
+    </header>
+
+    <!-- Toast -->
+    @if (toastMessage) {
+      <div class="toast" [class.toast-success]="toastType === 'success'" [class.toast-error]="toastType === 'error'">
+        {{ toastMessage }}
+      </div>
+    }
+
+    @if (activeTab === 'profile') {
+      @if (profile) {
+        <div class="profile-layout">
+
+          <!-- Avatar column -->
+          <div class="avatar-section">
+            <div class="avatar-wrap">
+              @if (newPicturePreview) {
+                <img class="avatar-img" [src]="newPicturePreview" alt="Profilna slika" />
+              } @else if (getImageUrl(profile.profilePicture)) {
+                <img class="avatar-img" [src]="getImageUrl(profile.profilePicture)" alt="Profilna slika" />
+              } @else {
+                <div class="avatar-placeholder">{{ initials }}</div>
+              }
+            </div>
+            <button class="btn-change-pic" (click)="triggerPictureInput()">Promeni sliku</button>
+            <input #pictureInput type="file" accept="image/*" (change)="onPictureChange($event)" style="display:none" />
+            @if (newPicturePreview) {
+              <p class="pic-note">Nova slika izabrana — sačuvajte profil da biste primenili.</p>
+            }
+          </div>
+
+          <!-- Form column -->
+          <div class="profile-form-section">
+
+            <!-- Read-only account info -->
+            <div class="info-card">
+              <h3>Podaci naloga</h3>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label">Korisničko ime</span>
+                  <span class="info-val">{{ profile.username }}</span>
+                </div>
+                @if (profile.facilityName) {
+                  <div class="info-row">
+                    <span class="info-label">Naziv objekta</span>
+                    <span class="info-val">{{ profile.facilityName }}</span>
+                  </div>
+                }
+                @if (profile.registrationNumber) {
+                  <div class="info-row">
+                    <span class="info-label">Matični broj</span>
+                    <span class="info-val">{{ profile.registrationNumber }}</span>
+                  </div>
+                }
+                @if (profile.taxId) {
+                  <div class="info-row">
+                    <span class="info-label">PIB</span>
+                    <span class="info-val">{{ profile.taxId }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="edit-card">
+              <h3>Lični podaci</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Ime</label>
+                  <input [(ngModel)]="profileForm.firstName" name="pFirstName" type="text" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label>Prezime</label>
+                  <input [(ngModel)]="profileForm.lastName" name="pLastName" type="text" class="form-input" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Telefon</label>
+                  <input [(ngModel)]="profileForm.phone" name="pPhone" type="text" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input [(ngModel)]="profileForm.email" name="pEmail" type="email" class="form-input" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Omiljeni sportovi <span class="label-hint">(max 5 izabrano: {{ profileForm.sports.length }}/5)</span></label>
+                <div class="sports-grid">
+                  @for (sport of availableSports; track sport) {
+                    <label class="sport-chip" [class.selected]="isProfileSportSelected(sport)"
+                           [class.disabled]="!isProfileSportSelected(sport) && profileForm.sports.length >= 5">
+                      <input type="checkbox" [checked]="isProfileSportSelected(sport)"
+                             (change)="toggleProfileSport(sport)" style="display:none" />
+                      {{ sport }}
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <button class="btn-primary" (click)="saveProfile()">Sačuvaj promene</button>
+            </div>
+
+          </div>
+        </div>
+      } @else {
+        <div class="loading">Učitavanje profila...</div>
+      }
+    }
+
+    @if (activeTab === 'facilities') {
+
+      <!-- Toolbar -->
+      <div class="facilities-toolbar">
+        <button class="btn-primary" (click)="openAddFacility()">+ Dodaj Objekat</button>
+        <button class="btn-secondary" (click)="triggerJsonInput()">📁 Uvezi JSON</button>
+        <input #jsonInput type="file" accept=".json" (change)="onJsonUpload($event)" style="display:none" />
+      </div>
+
+      @if (showAddFacility) {
+        <div class="add-facility-panel">
+          <h3>Novi sportski objekat</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Naziv objekta *</label>
+              <input [(ngModel)]="facilityForm.name" name="fName" type="text" class="form-input" placeholder="npr. SC Tašmajdan" />
+            </div>
+            <div class="form-group">
+              <label>Grad *</label>
+              <input [(ngModel)]="facilityForm.city" name="fCity" type="text" class="form-input" placeholder="npr. Beograd" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Adresa *</label>
+            <input [(ngModel)]="facilityForm.address" name="fAddress" type="text" class="form-input" placeholder="npr. Ilije Garašanina 26-28" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cena po satu (RSD)</label>
+              <input [(ngModel)]="facilityForm.hourlyRate" name="fRate" type="number" min="0" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Max. nedolazaka pre blokade</label>
+              <input [(ngModel)]="facilityForm.maxNoShows" name="fMax" type="number" min="1" class="form-input" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Radno vreme od</label>
+              <input [(ngModel)]="facilityForm.workingHoursFrom" name="fFrom" type="time" class="form-input" />
+            </div>
+            <div class="form-group">
+              <label>Radno vreme do</label>
+              <input [(ngModel)]="facilityForm.workingHoursTo" name="fTo" type="time" class="form-input" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Opis</label>
+            <textarea [(ngModel)]="facilityForm.description" name="fDesc" class="form-textarea" rows="3"
+                      placeholder="Kratak opis objekta..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Sportovi koji se nude</label>
+            <div class="sports-grid">
+              @for (sport of availableSports; track sport) {
+                <label class="sport-chip" [class.selected]="isFacilitySportSelected(sport)">
+                  <input type="checkbox" [checked]="isFacilitySportSelected(sport)"
+                         (change)="toggleFacilitySport(sport)" style="display:none" />
+                  {{ sport }}
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="courts-section">
+            <div class="courts-header">
+              <h4>Tereni / Hale
+                <span class="courts-note"> — obavezan min. 1 otvoreni teren (kapacitet ≥ 4)</span>
+              </h4>
+              <button class="btn-secondary btn-sm" (click)="showFacilityCourtForm = !showFacilityCourtForm">
+                {{ showFacilityCourtForm ? 'Otkaži' : '+ Dodaj teren' }}
+              </button>
+            </div>
+
+            @if (showFacilityCourtForm) {
+              <div class="court-form-inline">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Naziv terena *</label>
+                    <input [(ngModel)]="facilityCourtForm.name" name="cfName" type="text" class="form-input"
+                           placeholder="npr. Teren 1" />
+                  </div>
+                  <div class="form-group">
+                    <label>Tip</label>
+                    <select [(ngModel)]="facilityCourtForm.type" name="cfType" class="form-input">
+                      <option value="open">Otvoreni teren</option>
+                      <option value="closed">Zatvorena hala</option>
+                      <option value="hall">Dvorana (timski sport)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Kapacitet (mesta)</label>
+                    <input [(ngModel)]="facilityCourtForm.capacity" name="cfCap" type="number" min="1"
+                           class="form-input" />
+                  </div>
+                  <div class="form-group">
+                    <label>Sport</label>
+                    <select [(ngModel)]="facilityCourtForm.sport" name="cfSport" class="form-input">
+                      <option value="">— izaberi sport —</option>
+                      @for (sport of availableSports; track sport) {
+                        <option [value]="sport">{{ sport }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Opis opreme <span class="label-hint">(max 300 karaktera)</span></label>
+                  <textarea [(ngModel)]="facilityCourtForm.description" name="cfDesc" class="form-textarea"
+                            rows="2" maxlength="300"></textarea>
+                </div>
+                <div class="form-actions-inline">
+                  <button class="btn-primary btn-sm" (click)="addCourtToForm()">Dodaj teren</button>
+                  <button class="btn-ghost btn-sm" (click)="showFacilityCourtForm = false">Otkaži</button>
+                </div>
+              </div>
+            }
+
+            @if (facilityCourts.length > 0) {
+              <div class="courts-list">
+                @for (court of facilityCourts; track court.name) {
+                  <div class="court-item">
+                    <div class="court-info">
+                      <span class="court-name">{{ court.name }}</span>
+                      <span class="court-type-badge" [class]="'type-' + court.type">{{ courtTypeLabel(court.type) }}</span>
+                      @if (court.sport) { <span class="court-sport">{{ court.sport }}</span> }
+                      <span class="court-capacity">👥 {{ court.capacity }}</span>
+                    </div>
+                    <button class="btn-remove" (click)="removeCourtFromForm(court.name)">✕</button>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="empty-courts">Još nema dodatih terena.</p>
+            }
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" (click)="submitFacility()">Podnesi zahtev</button>
+            <button class="btn-ghost" (click)="cancelAddFacility()">Otkaži</button>
+          </div>
+        </div>
+      }
+
+      @if (facilities.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">🏟</div>
+          <p>Nema sportskih objekata. Kliknite "Dodaj Objekat" da biste dodali prvi.</p>
+        </div>
+      } @else {
+        <div class="facilities-list">
+          @for (facility of facilities; track facility._id) {
+            <div class="facility-card">
+              <div class="facility-card-header" (click)="toggleExpand(facility._id)">
+                <div class="facility-card-info">
+                  <span class="facility-name">{{ facility.name }}</span>
+                  <span class="facility-city">📍 {{ facility.city }}</span>
+                  <span class="facility-courts-count">{{ facility.courts.length }} terena</span>
+                </div>
+                <div class="facility-card-meta">
+                  <span class="status-badge" [class]="'status-' + facility.status">{{ statusLabel(facility.status) }}</span>
+                  <span class="expand-icon">{{ expandedFacilityId === facility._id ? '▲' : '▼' }}</span>
+                </div>
+              </div>
+              @if (expandedFacilityId === facility._id) {
+                <div class="facility-card-body">
+                  <div class="facility-details-grid">
+                    <div><span class="info-label">Adresa:</span> {{ facility.address }}</div>
+                    <div><span class="info-label">Cena/sat:</span> {{ facility.hourlyRate }} RSD</div>
+                    <div><span class="info-label">Radno vreme:</span> {{ facility.workingHours?.from }} – {{ facility.workingHours?.to }}</div>
+                    <div><span class="info-label">Max nedolazaka:</span> {{ facility.maxNoShows }}</div>
+                  </div>
+
+                  @if (facility.sports?.length > 0) {
+                    <div class="facility-sports">
+                      @for (sport of facility.sports; track sport) {
+                        <span class="sport-tag">{{ sport }}</span>
+                      }
+                    </div>
+                  }
+                  <h4 class="courts-subtitle">Tereni i hale</h4>
+                  @if (facility.courts.length === 0) {
+                    <p class="empty-courts">Nema terena.</p>
+                  } @else {
+                    <div class="courts-list">
+                      @for (court of facility.courts; track court.name) {
+                        <div class="court-item">
+                          <div class="court-info">
+                            <span class="court-name">{{ court.name }}</span>
+                            <span class="court-type-badge" [class]="'type-' + court.type">{{ courtTypeLabel(court.type) }}</span>
+                            @if (court.sport) { <span class="court-sport">{{ court.sport }}</span> }
+                            <span class="court-capacity">👥 {{ court.capacity }}</span>
+                            @if (court.description) {
+                              <span class="court-desc" title="{{ court.description }}">ℹ</span>
+                            }
+                          </div>
+                          <button class="btn-remove" (click)="removeCourt(facility._id, court.name)">✕</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (addCourtTargetId !== facility._id) {
+                    <button class="btn-secondary btn-sm mt-1" (click)="openAddCourt(facility._id)">+ Dodaj teren</button>
+                  } @else {
+                    <div class="court-form-inline mt-1">
+                      <h5 class="court-form-title">Novi teren</h5>
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label>Naziv *</label>
+                          <input [(ngModel)]="courtForm.name" name="ecName" type="text" class="form-input" />
+                        </div>
+                        <div class="form-group">
+                          <label>Tip</label>
+                          <select [(ngModel)]="courtForm.type" name="ecType" class="form-input">
+                            <option value="open">Otvoreni teren</option>
+                            <option value="closed">Zatvorena hala</option>
+                            <option value="hall">Dvorana (timski sport)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label>Kapacitet</label>
+                          <input [(ngModel)]="courtForm.capacity" name="ecCap" type="number" min="1" class="form-input" />
+                        </div>
+                        <div class="form-group">
+                          <label>Sport</label>
+                          <select [(ngModel)]="courtForm.sport" name="ecSport" class="form-input">
+                            <option value="">— izaberi sport —</option>
+                            @for (sport of availableSports; track sport) {
+                              <option [value]="sport">{{ sport }}</option>
+                            }
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label>Opis opreme <span class="label-hint">(max 300 karaktera)</span></label>
+                        <textarea [(ngModel)]="courtForm.description" name="ecDesc" class="form-textarea"
+                                  rows="2" maxlength="300"></textarea>
+                      </div>
+                      <div class="form-actions-inline">
+                        <button class="btn-primary btn-sm" (click)="submitAddCourt(facility._id)">Dodaj</button>
+                        <button class="btn-ghost btn-sm" (click)="addCourtTargetId = null">Otkaži</button>
+                      </div>
+                    </div>
+                  }
+
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+  </main>
+</div>

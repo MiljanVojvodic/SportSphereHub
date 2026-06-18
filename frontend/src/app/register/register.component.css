@@ -1,4 +1,4 @@
-.register-container {
+﻿.register-container {
   display: flex;
   justify-content: center;
   padding: 2rem 1rem;
@@ -21,7 +21,7 @@
   font-size: 1.6rem;
 }
 
-/* ── Role tabs ──────────────────────────────────── */
+/* role tabs */
 .role-tabs {
   display: flex;
   border: 1px solid #ddd;
@@ -47,7 +47,7 @@
   color: white;
 }
 
-/* ── Alerts ─────────────────────────────────────── */
+/* alerts */
 .alert {
   padding: 0.75rem 1rem;
   border-radius: 4px;
@@ -67,7 +67,7 @@
   border: 1px solid #6ee7b7;
 }
 
-/* ── Section titles ─────────────────────────────── */
+/* section titles */
 .section-title {
   font-size: 0.85rem;
   font-weight: 700;
@@ -79,7 +79,7 @@
   margin: 1.5rem 0 1rem;
 }
 
-/* ── Form grid ──────────────────────────────────── */
+/* form grid */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -152,7 +152,7 @@
   font-size: 0.78rem;
 }
 
-/* ── Profile picture ────────────────────────────── */
+/* profile picture */
 .picture-section {
   display: flex;
   align-items: flex-start;
@@ -192,7 +192,7 @@
   padding: 0.5rem;
 }
 
-/* ── Sports dropdown ─────────────────────────────── */
+/* sports dropdown */
 .sports-dropdown-wrapper {
   position: relative;
 }
@@ -303,7 +303,7 @@
   margin-top: 0.4rem;
 }
 
-/* ── Buttons ─────────────────────────────────────── */
+/* buttons */
 .btn {
   border: none;
   border-radius: 4px;
@@ -368,7 +368,7 @@
   font-size: 1rem;
 }
 
-/* ── Footer ─────────────────────────────────────── */
+/* footer */
 .form-footer {
   text-align: center;
   margin-top: 1.5rem;
@@ -386,7 +386,7 @@
   text-decoration: underline;
 }
 
-/* ── Responsive ─────────────────────────────────── */
+/* responsive */
 @media (max-width: 600px) {
   .register-card {
     padding: 1.5rem;

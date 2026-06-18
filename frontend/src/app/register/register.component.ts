@@ -3,6 +3,8 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractContro
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { createAvatar } from '@dicebear/core';
+import { avataaars } from '@dicebear/collection';
 
 function passwordValidator(control: AbstractControl): ValidationErrors | null {
   const v: string = control.value;
@@ -131,8 +133,14 @@ export class RegisterComponent {
 
   generateAvatar() {
     const seed = this.f('username').value || 'korisnik';
-    this.avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4`;
-    this.previewUrl = this.avatarUrl;
+    const svg = createAvatar(avataaars, {
+      seed,
+      backgroundColor: ['b6e3f4'],
+      size: 200
+    }).toString();
+    const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+    this.avatarUrl = dataUrl;
+    this.previewUrl = dataUrl;
     this.avatarGenerated = true;
     this.profilePictureBase64 = '';
   }
@@ -140,7 +148,6 @@ export class RegisterComponent {
   saveAvatarAsProfilePicture() {
     if (!this.avatarUrl) return;
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = 200;
@@ -159,7 +166,6 @@ export class RegisterComponent {
       this.avatarUrl = '';
       this.previewUrl = '';
       this.avatarGenerated = false;
-      this.profilePictureBase64 = '';
     };
     img.src = this.avatarUrl;
   }

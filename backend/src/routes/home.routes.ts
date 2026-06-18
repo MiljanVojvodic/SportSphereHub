@@ -5,5 +5,6 @@ const router = Router();
 const homeController = new HomeController();
 
 router.get('/', homeController.getHomeData);
+router.get('/sports', homeController.getSports);
 
 export default router;
