@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Compiled TypeScript output
+backend/dist/
+
+# Angular build output and cache
+frontend/dist/
+frontend/.angular/
+
+# User uploaded files
+backend/uploads/
+
+# Environment / secrets
+.env
+.env.*
+*.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code memory
+.claude/
